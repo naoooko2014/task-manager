@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 const PRIORITY_LABELS = { high: '高', medium: '中', low: '低' }
 const PRIORITY_COLORS = { high: '#e74c3c', medium: '#f39c12', low: '#27ae60' }
 
@@ -13,6 +15,8 @@ function isOverdue(dateStr) {
 }
 
 export default function TaskList({ tasks, onComplete, onDelete, onEdit }) {
+  const [expandedId, setExpandedId] = useState(null)
+
   const sorted = [...tasks].sort((a, b) => {
     const pa = { high: 0, medium: 1, low: 2 }
     if (pa[a.priority] !== pa[b.priority]) return pa[a.priority] - pa[b.priority]
@@ -26,58 +30,83 @@ export default function TaskList({ tasks, onComplete, onDelete, onEdit }) {
     return (
       <div className="empty-state">
         <p>📝 タスクがありません</p>
-        <p>「タスクを追加」ボタンからタスクを作成してください</p>
+        <p>＋ボタンからタスクを作成してください</p>
       </div>
     )
   }
 
+  const toggle = (id) => setExpandedId(prev => prev === id ? null : id)
+
   return (
     <div className="task-list">
-      {sorted.map(task => (
-        <div
-          key={task.id}
-          className={`task-card ${isOverdue(task.dueDate) ? 'overdue' : ''}`}
-        >
-          <div className="task-card-left">
-            <button className="complete-btn" onClick={() => onComplete(task.id)} title="完了にする">
-              ✓
-            </button>
-          </div>
-          <div className="task-card-body">
-            <div className="task-card-top">
-              <span className="task-title">{task.title}</span>
-              <span
-                className="priority-badge"
-                style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}
-              >
-                {PRIORITY_LABELS[task.priority]}
-              </span>
-              <span className="category-badge">{task.category}</span>
-              {task.isFromTemplate && <span className="template-badge">毎月</span>}
+      {sorted.map(task => {
+        const overdue = isOverdue(task.dueDate)
+        const expanded = expandedId === task.id
+        const dueDate = formatDate(task.dueDate)
+        const scheduledDate = formatDate(task.scheduledDate)
+
+        return (
+          <div
+            key={task.id}
+            className={`task-row ${overdue ? 'overdue' : ''} ${expanded ? 'expanded' : ''}`}
+            onClick={() => toggle(task.id)}
+          >
+            {/* メイン行：完了ボタン・日付・優先度・タイトル */}
+            <div className="task-row-main">
+              <button
+                className="complete-btn"
+                onClick={e => { e.stopPropagation(); onComplete(task.id) }}
+                title="完了"
+              >✓</button>
+
+              <div className="task-row-info">
+                <span
+                  className="priority-dot"
+                  style={{ background: PRIORITY_COLORS[task.priority] }}
+                  title={PRIORITY_LABELS[task.priority]}
+                />
+                <span className="task-row-title">{task.title}</span>
+                {task.isFromTemplate && <span className="template-badge">毎月</span>}
+              </div>
+
+              <div className="task-row-dates">
+                {dueDate && (
+                  <span className={`row-date ${overdue ? 'overdue-date' : 'due-date'}`}>
+                    {overdue ? '⚠️' : '⏰'}{dueDate}
+                  </span>
+                )}
+                {scheduledDate && !dueDate && (
+                  <span className="row-date scheduled-date">📅{scheduledDate}</span>
+                )}
+              </div>
+
+              <span className="expand-icon">{expanded ? '▲' : '▼'}</span>
             </div>
-            {task.description && (
-              <p className="task-description">{task.description}</p>
+
+            {/* 展開時：詳細＋操作ボタン */}
+            {expanded && (
+              <div className="task-row-detail" onClick={e => e.stopPropagation()}>
+                <div className="task-row-meta">
+                  <span className="category-badge">{task.category}</span>
+                  <span className="priority-badge" style={{ background: PRIORITY_COLORS[task.priority] }}>
+                    優先度:{PRIORITY_LABELS[task.priority]}
+                  </span>
+                  {scheduledDate && dueDate && (
+                    <span className="date-tag scheduled">📅 実施予定:{scheduledDate}</span>
+                  )}
+                </div>
+                {task.description && (
+                  <p className="task-description">{task.description}</p>
+                )}
+                <div className="task-row-actions">
+                  <button className="btn-edit" onClick={() => { onEdit(task); setExpandedId(null) }}>✏️ 編集</button>
+                  <button className="btn-delete" onClick={() => onDelete(task.id)}>🗑 削除</button>
+                </div>
+              </div>
             )}
-            <div className="task-dates">
-              {task.scheduledDate && (
-                <span className="date-tag scheduled">
-                  📅 実施予定: {formatDate(task.scheduledDate)}
-                </span>
-              )}
-              {task.dueDate && (
-                <span className={`date-tag due ${isOverdue(task.dueDate) ? 'overdue-text' : ''}`}>
-                  ⏰ 期限: {formatDate(task.dueDate)}
-                  {isOverdue(task.dueDate) && ' ⚠️ 期限超過'}
-                </span>
-              )}
-            </div>
           </div>
-          <div className="task-card-actions">
-            <button className="btn-edit" onClick={() => onEdit(task)}>編集</button>
-            <button className="btn-delete" onClick={() => onDelete(task.id)}>削除</button>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

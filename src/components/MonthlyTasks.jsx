@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const CATEGORIES = ['営業', '経理', '総務', '人事', '企画', 'その他']
+const CATEGORIES = ['人事', '労務', '派遣', 'その他']
 const PRIORITIES = [
   { value: 'high', label: '高' },
   { value: 'medium', label: '中' },
