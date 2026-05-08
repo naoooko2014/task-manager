@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-const PRIORITY_LABELS = { high: '高', medium: '中', low: '低' }
 const PRIORITY_COLORS = { high: '#e74c3c', medium: '#f39c12', low: '#27ae60' }
+const PRIORITY_LABELS = { high: '高', medium: '中', low: '低' }
 
 function formatDate(dateStr) {
   if (!dateStr) return null
@@ -20,9 +20,9 @@ export default function TaskList({ tasks, onComplete, onDelete, onEdit }) {
   const sorted = [...tasks].sort((a, b) => {
     const pa = { high: 0, medium: 1, low: 2 }
     if (pa[a.priority] !== pa[b.priority]) return pa[a.priority] - pa[b.priority]
-    if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate)
-    if (a.dueDate) return -1
-    if (b.dueDate) return 1
+    if (a.scheduledDate && b.scheduledDate) return new Date(a.scheduledDate) - new Date(b.scheduledDate)
+    if (a.scheduledDate) return -1
+    if (b.scheduledDate) return 1
     return 0
   })
 
@@ -42,8 +42,8 @@ export default function TaskList({ tasks, onComplete, onDelete, onEdit }) {
       {sorted.map(task => {
         const overdue = isOverdue(task.dueDate)
         const expanded = expandedId === task.id
-        const dueDate = formatDate(task.dueDate)
         const scheduledDate = formatDate(task.scheduledDate)
+        const dueDate = formatDate(task.dueDate)
 
         return (
           <div
@@ -51,7 +51,6 @@ export default function TaskList({ tasks, onComplete, onDelete, onEdit }) {
             className={`task-row ${overdue ? 'overdue' : ''} ${expanded ? 'expanded' : ''}`}
             onClick={() => toggle(task.id)}
           >
-            {/* メイン行：完了ボタン・日付・優先度・タイトル */}
             <div className="task-row-main">
               <button
                 className="complete-btn"
@@ -70,20 +69,17 @@ export default function TaskList({ tasks, onComplete, onDelete, onEdit }) {
               </div>
 
               <div className="task-row-dates">
-                {dueDate && (
-                  <span className={`row-date ${overdue ? 'overdue-date' : 'due-date'}`}>
-                    {overdue ? '⚠️' : '⏰'}{dueDate}
-                  </span>
-                )}
-                {scheduledDate && !dueDate && (
+                {scheduledDate && (
                   <span className="row-date scheduled-date">📅{scheduledDate}</span>
+                )}
+                {overdue && (
+                  <span className="row-date overdue-date">⚠️期限切れ</span>
                 )}
               </div>
 
               <span className="expand-icon">{expanded ? '▲' : '▼'}</span>
             </div>
 
-            {/* 展開時：詳細＋操作ボタン */}
             {expanded && (
               <div className="task-row-detail" onClick={e => e.stopPropagation()}>
                 <div className="task-row-meta">
@@ -91,8 +87,10 @@ export default function TaskList({ tasks, onComplete, onDelete, onEdit }) {
                   <span className="priority-badge" style={{ background: PRIORITY_COLORS[task.priority] }}>
                     優先度:{PRIORITY_LABELS[task.priority]}
                   </span>
-                  {scheduledDate && dueDate && (
-                    <span className="date-tag scheduled">📅 実施予定:{scheduledDate}</span>
+                  {dueDate && (
+                    <span className={`date-tag ${overdue ? '' : 'due'}`} style={overdue ? {background:'#fce8e6',color:'#c5221f'} : {}}>
+                      ⏰ 期限:{dueDate}
+                    </span>
                   )}
                 </div>
                 {task.description && (

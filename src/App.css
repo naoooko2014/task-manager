@@ -403,6 +403,27 @@ body {
 
 .task-card.overdue { border-left-color: #e74c3c; background: #fff8f8; }
 
+/* 完了済み行 */
+.completed-row {
+  border-left-color: #27ae60 !important;
+  opacity: 0.85;
+}
+
+.completed-title {
+  text-decoration: line-through;
+  color: #9aa0a6;
+}
+
+.completed-date-tag {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
 .task-card-body { flex: 1; min-width: 0; }
 
 .task-card-top {
